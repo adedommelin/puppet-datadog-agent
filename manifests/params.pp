@@ -15,19 +15,25 @@
 # Sample Usage:
 #
 class datadog::params {
-  $api_key = "your API key"
-  $dd_url  = "https://app.datadoghq.com"
+  $api_key            = hiera('datadog_api_key', $::datadog_api_key)
+  $dd_hostname        = hiera('datadog_hostname', $::fqdn)
+  $dd_url             = hiera('datadog_url','https://app.datadoghq.com')
+  $dd_debug_mode      = hiera('datadog_debug_mode', false)
+  $puppet_run_reports = hiera('datadog_run_reports',false)
+  $puppetmaster_user  = hiera('puppetmaster_user', 'puppet')
 
-  case $operatingsystem {
-    "Ubuntu","Debian": {
-      $rubygems_package = 'rubygems'
-      $rubydev_package =  'ruby-dev'
+
+  if ! $::puppetversion =~ /(i?)enterprise/ {
+    case $::operatingsystem {
+      'Ubuntu','Debian': {
+        $rubygems_package = 'rubygems'
+        $rubydev_package  = 'ruby-dev'
+      }
+      'RedHat','CentOS','Fedora','Amazon': {
+        $rubygems_package = 'rubygems'
+        $rubydev_package  = 'ruby-devel'
+      }
+      default: { notify{ 'Unsupported platform': } }
     }
-    "RedHat","CentOS","Fedora","Amazon": {
-      $rubygems_package = 'rubygems'
-      $rubydev_package = 'ruby-devel'
-    }
-    default: { notify{'Unsupported OS': message => 'The DataDog module only support Red Hat and Ubuntu derivatives'} }
   }
-    
 }

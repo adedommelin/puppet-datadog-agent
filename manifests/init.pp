@@ -23,38 +23,33 @@
 # class{'datadog': api_key => 'your key'}
 #
 #
-class datadog(
-  $api_key = 'your key',
-  $puppet_run_reports = false,
-  $puppetmaster_user = 'puppet'
+class datadog (
+  $api_key            = $datadog::params::api_key,
+  $puppet_run_reports = $datadog::params::puppet_run_reports,
+  $puppetmaster_user  = $datadog::params::puppetmaster_user,
+  $dd_url             = $datadog::params::dd_url,
+  $dd_hostname        = $datadog::params::dd_hostname,
+  $dd_debug_mode      = $datadog::params::dd_debug_mode
 ) inherits datadog::params {
 
-  include datadog::params
-  $dd_url  = $datadog::params::dd_url
-
-  case $operatingsystem {
-    "Ubuntu","Debian": { include datadog::ubuntu }
-    "RedHat","CentOS","Fedora","Amazon": { include datadog::redhat }
-    default: { notify{'Unsupported OS': message => 'The DataDog module only support Red Hat and Ubuntu derivatives'} }
+  case $::operatingsystem {
+    'Ubuntu','Debian': { include datadog::debian }
+    'RedHat','CentOS','Fedora','Amazon': { include datadog::redhat }
+    default: { notify{ 'Unsupported platform': } }
   }
 
-  file { "/etc/dd-agent":
-    ensure   => present,
-    owner    => "root",
-    group    => "root",
-    mode     => 0755,
-    require  => Package["datadog-agent"],
-  }
-
-  # main agent config file
-  file { "/etc/dd-agent/datadog.conf":
-    ensure   => file,
-    content  => template("datadog/datadog.conf.erb"),
-    owner    => "dd-agent",
-    group    => "root",
-    mode     => 0640,
-    notify   => Service["datadog-agent"],
-    require  => File["/etc/dd-agent"],
+  file { '/etc/dd-agent':
+    ensure   => 'directory',
+    owner    => 'root',
+    group    => 'root',
+    mode     => '0755',
+    require  => Package['datadog-agent'],
+  } -> file { '/etc/dd-agent/datadog.conf':
+    content  => template('datadog/datadog.conf.erb'),
+    owner    => 'dd-agent',
+    group    => 'root',
+    mode     => '0640',
+    notify   => Service['datadog-agent']
   }
 
   if $puppet_run_reports {
@@ -63,5 +58,4 @@ class datadog(
       puppetmaster_user => $puppetmaster_user,
     }
   }
-
 }

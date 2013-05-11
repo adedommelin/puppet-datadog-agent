@@ -11,10 +11,10 @@ api_key: <%= api_key %>
 
 # Boolean to enable debug_mode, which outputs massive amounts of log messages 
 # to the /tmp/ directory.  
-debug_mode: no 
+debug_mode: <%= dd_debug_mode %>
 
 # Force the hostname to whatever you want.
-hostname: <%= fqdn %>
+hostname: <%= dd_hostname %>
 
 # Use the amazon EC2 instance-id instead of hostname (unless hostname is
 # explicitly set)
